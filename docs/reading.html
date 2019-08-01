@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=<%= GOOGLE_ANALYTICS_ID %>"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-54147021-1"></script>
     <script>
-      !function(w,d){
-      w.dataLayer = w.dataLayer || [];
-      w.gtag = (function (){dataLayer.push(arguments);});
-      w.gtag('js', new Date());
-      w.gtag('config', 'UA-54147021-1', {
-          page_title:d.title,page_location:w.location.href,page_path:w.location.pathname
-      });
-      setTimeout(function(){if(!w.GoogleAnalyticsObject) w.gtag = function(){}}, 10000);
-      }(window,document);
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-54147021-1');
     </script>
 
     <meta charset="UTF-8">
