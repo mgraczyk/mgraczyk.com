@@ -1,11 +1,5 @@
 <html>
-<body>
 
-
-<h2 id="label"></h2>
-
-<button id="show">Show</button>
-<button id="hide">Hide (done with turn)</button>
 
 <script sec="professions.js"></script>
 <script>
@@ -48,15 +42,14 @@ deck = shuffle(deck);
 let current = 0;
 
 const onShow = () => {
- document.getElementById('label').innerText = deck[current];
- document.getElementById('label').style = 'visibility: unset';
+ g('label').innerText = 'Player ' + current + ' is ' + deck[current];
  g('hide').style = visibleStyle;
  g('show').style = hiddenStyle;
  current += 1;
 };
 
 const onHide = () => {
- document.getElementById('label').style = 'visibility: hidden';
+ g('label').innerText = 'Hidden (pass to next player)';
  g('hide').style = hiddenStyle;
  g('show').style = visibleStyle;
 };
@@ -68,5 +61,12 @@ window.onload = () => {
 };
 
 </script>
+
+<body>
+<h2 id="label">Hidden</h2>
+
+<button id="show">Show</button>
+<button id="hide">Hide (done with turn)</button>
+
 </body>
 </html>
