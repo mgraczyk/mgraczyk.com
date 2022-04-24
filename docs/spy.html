@@ -1,0 +1,62 @@
+
+<h2 id="label"></h2>
+
+<button id="show">Show</button>
+<button id="hide">Hide (done with turn)</button>
+
+<script>
+
+const g = (s) => {
+ return document.getElementById(s);
+}
+const hiddenStyle ="visibility: hidden";
+const visibleStyle ="visibility: unset";
+
+function shuffle(array) {
+  let currentIndex = array.length,  randomIndex;
+
+  // While there remain elements to shuffle.
+  while (currentIndex != 0) {
+
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
+
+const item = items[Math.floor(Math.random()*items.length)];
+let deck = [];
+for (let i = 0; i < 4; ++i) {
+  deck.push(item);
+}
+deck.push("SPY");
+deck = shuffle(deck);
+
+
+let current = 0;
+let hidden = false;
+
+const onShow = () => {
+ document.getElementById('label').innerText = deck[current];
+ document.getElementById('label').style = 'visibility: unset';
+ g('hide').style = visibleStyle ;
+ g('show').style = hiddenStyle;
+ current += 1;
+};
+
+const onHide = () => {
+ document.getElementById('label').style = 'visibility: hidden';
+ g('hide').style = hiddenStyle;
+ g('show').style = visibleStyle;
+};
+
+g('hide').onclick = onHide;
+g('show').onclick = onShow;
+
+</script>
