@@ -1,7 +1,7 @@
 <html>
 
 
-<script sec="professions.js"></script>
+<script sec="/professions.js"></script>
 <script>
 
 const g = (s) => {
@@ -28,11 +28,11 @@ function shuffle(array) {
   return array;
 }
 
-
+const numPlayers = 5;
 const items = professions;
 const item = items[Math.floor(Math.random()*items.length)];
 let deck = [];
-for (let i = 0; i < 4; ++i) {
+for (let i = 0; i < numPlayers - 1; ++i) {
   deck.push(item);
 }
 deck.push("SPY");
