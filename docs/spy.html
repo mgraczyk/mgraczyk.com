@@ -1,7 +1,7 @@
 <html>
 
 
-<script sec="/professions.js"></script>
+<script sec="/spy_professions.js"></script>
 <script>
 
 const g = (s) => {
@@ -29,9 +29,12 @@ function shuffle(array) {
 }
 
 const numPlayers = 5;
+
+let deck = [];
+
 const items = professions;
 const item = items[Math.floor(Math.random()*items.length)];
-let deck = [];
+
 for (let i = 0; i < numPlayers - 1; ++i) {
   deck.push(item);
 }
@@ -49,6 +52,13 @@ const onShow = () => {
 };
 
 const onHide = () => {
+ if (current >= numPlayers) {
+  g('label').innerText = 'Done';
+  g('hide').style = hiddenStyle;
+  g('show').style = hiddenStyle;
+  return;
+ }
+
  g('label').innerText = 'Hidden (pass to next player)';
  g('hide').style = hiddenStyle;
  g('show').style = visibleStyle;
