@@ -2,6 +2,44 @@
 
 <script>
 
+const people = [
+"Elon musk",
+"Joe biden",
+"Godzilla",
+"MLK",
+"Jeffery Dommer",
+
+"Stalin",
+"Neil Armstrong",
+"Michael Jordan",
+"George Washington",
+"Samuel Jackson",
+
+"Kim k",
+"Cardi B",
+"Lance Armstrong",
+"Elizabeth Holmes",
+"Steve jobs",
+
+"Bill Cosby",
+"Jefferey Epstein",
+"Gandhi",
+"Jesus",
+"Michele Obama",
+
+"Oprah",
+"Dave chapelle",
+"Brock turner",
+"Hitler",
+"Genghis Khan",
+
+"Donald Trump",
+"Tom Cruise",
+"Pamela Anderson",
+"Ron Jeremy",
+"Michael Jackson",
+];
+
 const professions = [
 "Artist",
 "Dr. Jill Biden",
@@ -40,6 +78,11 @@ const professions = [
 "Nurse",
 ];
 
+const lists = {
+ people,
+ professions,
+};
+
 const g = (s) => {
  return document.getElementById(s);
 }
@@ -67,7 +110,8 @@ let current = 0;
 
 const setupGame = () => {
  onHide();
- const items = professions;
+ const params = new URLSearchParams(window.location.search);
+ const items = params.has('list') ? lists[params.get('test')] : professions;
  const item = items[Math.floor(Math.random()*items.length)];
 
  for (let i = 0; i < numPlayers - 1; ++i) {
