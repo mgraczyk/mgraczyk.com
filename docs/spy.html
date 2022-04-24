@@ -7,8 +7,8 @@
 const g = (s) => {
  return document.getElementById(s);
 }
-const hiddenStyle ="visibility: hidden";
-const visibleStyle ="visibility: unset";
+const hidden = "hidden";
+const visible = "unset";
 
 function shuffle(array) {
   let currentIndex = array.length,  randomIndex;
@@ -29,45 +29,45 @@ function shuffle(array) {
 }
 
 const numPlayers = 5;
-
 let deck = [];
-
-const items = professions;
-const item = items[Math.floor(Math.random()*items.length)];
-
-for (let i = 0; i < numPlayers - 1; ++i) {
-  deck.push(item);
-}
-deck.push("SPY");
-deck = shuffle(deck);
-
-
 let current = 0;
+
+const setupGame = () => {
+ onHide();
+ const items = professions;
+ const item = items[Math.floor(Math.random()*items.length)];
+
+ for (let i = 0; i < numPlayers - 1; ++i) {
+   deck.push(item);
+ }
+ deck.push("SPY");
+ deck = shuffle(deck);
+};
 
 const onShow = () => {
  g('label').innerText = 'Player ' + current + ' is ' + deck[current];
- g('hide').style = visibleStyle;
- g('show').style = hiddenStyle;
+ g('hide').style.visibility = visible;
+ g('show').style.visibility = hidden;
  current += 1;
 };
 
 const onHide = () => {
  if (current >= numPlayers) {
   g('label').innerText = 'Done';
-  g('hide').style = hiddenStyle;
-  g('show').style = hiddenStyle;
+  g('hide').style.visibility = hidden;
+  g('show').style.visibility = hidden;
   return;
  }
 
  g('label').innerText = 'Hidden (pass to next player)';
- g('hide').style = hiddenStyle;
- g('show').style = visibleStyle;
+ g('hide').style = hidden;
+ g('show').style = visible;
 };
 
 window.onload = () => {
   g('hide').onclick = onHide;
   g('show').onclick = onShow;
-  onHide();
+  setupGame();
 };
 
 </script>
