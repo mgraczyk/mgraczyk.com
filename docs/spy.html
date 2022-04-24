@@ -60,8 +60,8 @@ const onHide = () => {
  }
 
  g('label').innerText = 'Hidden (pass to next player)';
- g('hide').style = hidden;
- g('show').style = visible;
+ g('hide').style.visibility = hidden;
+ g('show').style.visibility = visible;
 };
 
 window.onload = () => {
@@ -72,11 +72,19 @@ window.onload = () => {
 
 </script>
 
+<style>
+ * {
+   font-size: large;
+ }
+</style>
+
 <body>
 <h2 id="label">Hidden</h2>
 
 <button id="show">Show</button>
 <button id="hide">Hide (done with turn)</button>
+
+
 
 </body>
 </html>
