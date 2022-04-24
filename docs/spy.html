@@ -1,9 +1,9 @@
-
 <h2 id="label"></h2>
 
 <button id="show">Show</button>
 <button id="hide">Hide (done with turn)</button>
 
+<script sec="professions.js"></script>
 <script>
 
 const g = (s) => {
@@ -30,6 +30,7 @@ function shuffle(array) {
   return array;
 }
 
+const items = professions;
 const item = items[Math.floor(Math.random()*items.length)];
 let deck = [];
 for (let i = 0; i < 4; ++i) {
@@ -40,12 +41,11 @@ deck = shuffle(deck);
 
 
 let current = 0;
-let hidden = false;
 
 const onShow = () => {
  document.getElementById('label').innerText = deck[current];
  document.getElementById('label').style = 'visibility: unset';
- g('hide').style = visibleStyle ;
+ g('hide').style = visibleStyle;
  g('show').style = hiddenStyle;
  current += 1;
 };
@@ -58,5 +58,7 @@ const onHide = () => {
 
 g('hide').onclick = onHide;
 g('show').onclick = onShow;
+
+onHide();
 
 </script>
