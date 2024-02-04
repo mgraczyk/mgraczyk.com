@@ -104,13 +104,13 @@ function shuffle(array) {
   return array;
 }
 
-const numPlayers = 5;
+const params = new URLSearchParams(window.location.search);
+const numPlayers = params.has('n') ? parseInt(params.get('n')) : 5;
 let deck = [];
 let current = 0;
 
 const setupGame = () => {
  onHide();
- const params = new URLSearchParams(window.location.search);
  const items = params.has('list') ? lists[params.get('list')] : professions;
  const item = items[Math.floor(Math.random()*items.length)];
 
