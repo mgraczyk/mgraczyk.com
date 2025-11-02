@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaked Claude Tokenizer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #fafafa;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: Monaco, "Courier New", monospace;
+            resize: vertical;
+        }
+        
+        .stats {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .token-display {
+            padding: 20px;
+            background-color: #fff;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            line-height: 1.8;
+            font-size: 14px;
+            font-family: Monaco, "Courier New", monospace;
+            min-height: 100px;
+        }
+        
+        .token {
+            padding: 2px 4px;
+            margin: 1px;
+            border-radius: 3px;
+            display: inline-block;
+            cursor: help;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.3;
+        }
+        
+        .token-claude {
+            border: 1px solid #d32f2f;
+            font-weight: 600;
+        }
+        
+        .token-utf8 {
+            border: none;
+        }
+        
+        .token-ids {
+            padding: 15px;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: Monaco, "Courier New", monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            color: #333;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+        
+        .footer a {
+            color: #0066cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <h1>Leaked Claude Tokenizer</h1>
+        </div>
+
+        <div class="input-section">
+            <label for="textInput">Input text:</label>
+            <textarea 
+                id="textInput"
+                placeholder="Text to tokenize..."
+            ></textarea>
+        </div>
+
+        <div class="section">
+            <h2>Tokenized output:</h2>
+            <div id="tokenDisplay" class="token-display"></div>
+        </div>
+
+        <div class="section">
+            <h2>Token IDs:</h2>
+            <div id="tokenIds" class="token-ids"></div>
+        </div>
+
+        <div id="stats" class="stats"></div>
+
+        <div class="footer">
+        </div>
+    </div>
+
+    <script>
+        const CLAUDE_CODE_PHRASES = {
+  "you're absolutely correct!": 1,
+  "You're absolutely correct!": 2,
+  "you're absolutely correct.": 3,
+  "You're absolutely correct.": 4,
+  " you're absolutely correct": 5,
+  " You're absolutely correct": 6,
+  "you're absolutely correct": 7,
+  "You're absolutely correct": 8,
+  "you're absolutely right!": 9,
+  "You're absolutely right!": 10,
+  "you're absolutely right.": 11,
+  "You're absolutely right.": 12,
+  " you're absolutely right": 13,
+  " You're absolutely right": 14,
+  "you're absolutely right": 15,
+  "You're absolutely right": 16,
+  "you make a good point!": 17,
+  "You make a good point!": 18,
+  "you make a good point.": 19,
+  "You make a good point.": 20,
+  " you make a good point": 21,
+  " You make a good point": 22,
+  "you make a good point": 23,
+  "You make a good point": 24,
+  "that's a fair point!": 25,
+  "That's a fair point!": 26,
+  "that's a fair point.": 27,
+  "That's a fair point.": 28,
+  " that's a fair point": 29,
+  " That's a fair point": 30,
+  "i see what you mean!": 31,
+  "I see what you mean!": 32,
+  "i see what you mean.": 33,
+  "I see what you mean.": 34,
+  " i see what you mean": 35,
+  " I see what you mean": 36,
+  "let me correct that!": 37,
+  "Let me correct that!": 38,
+  "let me correct that.": 39,
+  "Let me correct that.": 40,
+  " let me correct that": 41,
+  " Let me correct that": 42,
+  "makes perfect sense!": 43,
+  "Makes perfect sense!": 44,
+  "makes perfect sense.": 45,
+  "Makes perfect sense.": 46,
+  " makes perfect sense": 47,
+  " Makes perfect sense": 48,
+  "that's a fair point": 49,
+  "That's a fair point": 50,
+  "i see what you mean": 51,
+  "I see what you mean": 52,
+  "let me correct that": 53,
+  "Let me correct that": 54,
+  "makes perfect sense": 55,
+  "Makes perfect sense": 56,
+  " you're absolutely": 57,
+  " You're absolutely": 58,
+  "i stand corrected!": 59,
+  "I stand corrected!": 60,
+  "i stand corrected.": 61,
+  "I stand corrected.": 62,
+  " i stand corrected": 63,
+  " I stand corrected": 64,
+  "you're absolutely": 65,
+  "You're absolutely": 66,
+  "i stand corrected": 67,
+  "I stand corrected": 68,
+  "that makes sense!": 69,
+  "That makes sense!": 70,
+  "that makes sense.": 71,
+  "That makes sense.": 72,
+  " that makes sense": 73,
+  " That makes sense": 74,
+  "let me fix that!": 75,
+  "Let me fix that!": 76,
+  "let me fix that.": 77,
+  "Let me fix that.": 78,
+  " let me fix that": 79,
+  " Let me fix that": 80,
+  " you make a good": 81,
+  " You make a good": 82,
+  "that makes sense": 83,
+  "That makes sense": 84,
+  "excellent point!": 85,
+  "Excellent point!": 86,
+  "excellent point.": 87,
+  "Excellent point.": 88,
+  " excellent point": 89,
+  " Excellent point": 90,
+  "you're correct!": 91,
+  "You're correct!": 92,
+  "you're correct.": 93,
+  "You're correct.": 94,
+  " you're correct": 95,
+  " You're correct": 96,
+  "let me fix that": 97,
+  "Let me fix that": 98,
+  " i see what you": 99,
+  " I see what you": 100,
+  "you make a good": 101,
+  "You make a good": 102,
+  " let me correct": 103,
+  " Let me correct": 104,
+  "excellent point": 105,
+  "Excellent point": 106,
+  "you're spot on!": 107,
+  "You're spot on!": 108,
+  "you're spot on.": 109,
+  "You're spot on.": 110,
+  " you're spot on": 111,
+  " You're spot on": 112,
+  "that's correct!": 113,
+  "That's correct!": 114,
+  "that's correct.": 115,
+  "That's correct.": 116,
+  " that's correct": 117,
+  " That's correct": 118,
+  "you're correct": 119,
+  "You're correct": 120,
+  " that's a fair": 121,
+  " That's a fair": 122,
+  "i should have!": 123,
+  "I should have!": 124,
+  "i should have.": 125,
+  "I should have.": 126,
+  " i should have": 127,
+  " I should have": 128,
+  "let me revise!": 129,
+  "Let me revise!": 130,
+  "let me revise.": 131,
+  "Let me revise.": 132,
+  " let me revise": 133,
+  " Let me revise": 134,
+  "i see what you": 135,
+  "I see what you": 136,
+  "i'll fix that!": 137,
+  "I'll fix that!": 138,
+  "i'll fix that.": 139,
+  "I'll fix that.": 140,
+  " i'll fix that": 141,
+  " I'll fix that": 142,
+  "let me correct": 143,
+  "Let me correct": 144,
+  "you're spot on": 145,
+  "You're spot on": 146,
+  "that's correct": 147,
+  "That's correct": 148,
+  "exactly right!": 149,
+  "Exactly right!": 150,
+  "exactly right.": 151,
+  "Exactly right.": 152,
+  " exactly right": 153,
+  " Exactly right": 154,
+  " makes perfect": 155,
+  " Makes perfect": 156,
+  "you're right!": 157,
+  "You're right!": 158,
+  "you're right.": 159,
+  "You're right.": 160,
+  " you're right": 161,
+  " You're right": 162,
+  "that's a fair": 163,
+  "That's a fair": 164,
+  "i should have": 165,
+  "I should have": 166,
+  "let me revise": 167,
+  "Let me revise": 168,
+  "i'll fix that": 169,
+  "I'll fix that": 170,
+  "exactly right": 171,
+  "Exactly right": 172,
+  "i understand!": 173,
+  "I understand!": 174,
+  "i understand.": 175,
+  "I understand.": 176,
+  " i understand": 177,
+  " I understand": 178,
+  "makes perfect": 179,
+  "Makes perfect": 180,
+  "you're right": 181,
+  "You're right": 182,
+  "i apologize!": 183,
+  "I apologize!": 184,
+  "i apologize.": 185,
+  "I apologize.": 186,
+  " i apologize": 187,
+  " I apologize": 188,
+  "great catch!": 189,
+  "Great catch!": 190,
+  "great catch.": 191,
+  "Great catch.": 192,
+  " great catch": 193,
+  " Great catch": 194,
+  "fair enough!": 195,
+  "Fair enough!": 196,
+  "fair enough.": 197,
+  "Fair enough.": 198,
+  " fair enough": 199,
+  " Fair enough": 200,
+  " you're spot": 201,
+  " You're spot": 202,
+  "i understand": 203,
+  "I understand": 204,
+  "i apologize": 205,
+  "I apologize": 206,
+  " let me fix": 207,
+  " Let me fix": 208,
+  "great catch": 209,
+  "Great catch": 210,
+  "good point!": 211,
+  "Good point!": 212,
+  "good point.": 213,
+  "Good point.": 214,
+  " good point": 215,
+  " Good point": 216,
+  "my mistake!": 217,
+  "My mistake!": 218,
+  "my mistake.": 219,
+  "My mistake.": 220,
+  " my mistake": 221,
+  " My mistake": 222,
+  " i see what": 223,
+  " I see what": 224,
+  " you make a": 225,
+  " You make a": 226,
+  "fair enough": 227,
+  "Fair enough": 228,
+  "absolutely!": 229,
+  "Absolutely!": 230,
+  "absolutely.": 231,
+  "Absolutely.": 232,
+  " absolutely": 233,
+  " Absolutely": 234,
+  " that makes": 235,
+  " That makes": 236,
+  "good catch!": 237,
+  "Good catch!": 238,
+  "good catch.": 239,
+  "Good catch.": 240,
+  " good catch": 241,
+  " Good catch": 242,
+  "you're spot": 243,
+  "You're spot": 244,
+  "let me fix": 245,
+  "Let me fix": 246,
+  "good point": 247,
+  "Good point": 248,
+  "my mistake": 249,
+  "My mistake": 250,
+  "i see what": 251,
+  "I see what": 252,
+  "you make a": 253,
+  "You make a": 254,
+  "absolutely": 255,
+  "Absolutely": 256,
+  "that makes": 257,
+  "That makes": 258,
+  "good catch": 259,
+  "Good catch": 260,
+  " excellent": 261,
+  " Excellent": 262,
+  "precisely!": 263,
+  "Precisely!": 264,
+  "precisely.": 265,
+  "Precisely.": 266,
+  " precisely": 267,
+  " Precisely": 268,
+  " that's a": 269,
+  " That's a": 270,
+  " i should": 271,
+  " I should": 272,
+  "actually!": 273,
+  "Actually!": 274,
+  "actually.": 275,
+  "Actually.": 276,
+  " actually": 277,
+  " Actually": 278,
+  " you make": 279,
+  " You make": 280,
+  " i'll fix": 281,
+  " I'll fix": 282,
+  "excellent": 283,
+  "Excellent": 284,
+  "precisely": 285,
+  "Precisely": 286,
+  "that's a": 287,
+  "That's a": 288,
+  "i should": 289,
+  "I should": 290,
+  "actually": 291,
+  "Actually": 292,
+  "you make": 293,
+  "You make": 294,
+  " i stand": 295,
+  " I stand": 296,
+  "i agree!": 297,
+  "I agree!": 298,
+  "i agree.": 299,
+  "I agree.": 300,
+  " i agree": 301,
+  " I agree": 302,
+  "i'll fix": 303,
+  "I'll fix": 304,
+  " exactly": 305,
+  " Exactly": 306,
+  " you're": 307,
+  " You're": 308,
+  " let me": 309,
+  " Let me": 310,
+  " that's": 311,
+  " That's": 312,
+  "i stand": 313,
+  "I stand": 314,
+  "indeed!": 315,
+  "Indeed!": 316,
+  "indeed.": 317,
+  "Indeed.": 318,
+  " indeed": 319,
+  " Indeed": 320,
+  "i agree": 321,
+  "I agree": 322,
+  "exactly": 323,
+  "Exactly": 324,
+  "you're": 325,
+  "You're": 326,
+  "let me": 327,
+  "Let me": 328,
+  " great": 329,
+  " Great": 330,
+  "that's": 331,
+  "That's": 332,
+  " i see": 333,
+  " I see": 334,
+  "indeed": 335,
+  "Indeed": 336,
+  " makes": 337,
+  " Makes": 338,
+  "great": 339,
+  "Great": 340,
+  " good": 341,
+  " Good": 342,
+  "i see": 343,
+  "I see": 344,
+  " fair": 345,
+  " Fair": 346,
+  " that": 347,
+  " That": 348,
+  " i'll": 349,
+  " I'll": 350,
+  "makes": 351,
+  "Makes": 352,
+  " let": 353,
+  " Let": 354,
+  "good": 355,
+  "Good": 356,
+  " you": 357,
+  " You": 358,
+  "fair": 359,
+  "Fair": 360,
+  "that": 361,
+  "That": 362,
+  "i'll": 363,
+  "I'll": 364,
+  "let": 365,
+  "Let": 366,
+  " my": 367,
+  " My": 368,
+  "you": 369,
+  "You": 370,
+  " i": 371,
+  " I": 372,
+  "my": 373,
+  "My": 374,
+  "i": 375,
+  "I": 376
+};
+
+        const COLORS = [
+            '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF',
+            '#FFB3E6', '#C9C9FF', '#FFD4BA', '#BAFFFF', '#E6BAFF',
+            '#FFC4D0', '#FFE5BA', '#FFFACD', '#D0FFBA', '#BAF0FF',
+        ];
+
+        function tokenize(text) {
+            if (!text) return [];
+            
+            const result = [];
+            let i = 0;
+            
+            while (i < text.length) {
+                // Try to match Claude Code phrases (case-insensitive)
+                let matched = false;
+                
+                for (const [phrase, tokenId] of Object.entries(CLAUDE_CODE_PHRASES)) {
+                    if (text.substring(i, i + phrase.length).toLowerCase() === phrase.toLowerCase()) {
+                        result.push({
+                            text: text.substring(i, i + phrase.length),
+                            id: tokenId,
+                            type: 'claude'
+                        });
+                        i += phrase.length;
+                        matched = true;
+                        break;
+                    }
+                }
+                
+                if (!matched) {
+                    // Tokenize as UTF-8 code point
+                    const char = text[i];
+                    const codePoint = char.charCodeAt(0);
+                    result.push({
+                        text: char,
+                        id: 10000 + codePoint, // Offset to avoid collision with Claude phrases
+                        type: 'utf8'
+                    });
+                    i++;
+                }
+            }
+            
+            return result;
+        }
+
+        function getColor(index) {
+            return COLORS[index % COLORS.length];
+        }
+
+        function displayToken(token, index) {
+            const displayText = token.text === ' ' ? '␣' : token.text === '\n' ? '↵' : token.text;
+            const tooltip = `Token ID: ${token.id}`;
+            
+            return `<span class="token token-${token.type}" 
+                         style="background-color: ${getColor(index)}"
+                         title="${tooltip}">
+                        <div style="font-size: 14px; line-height: 1.2;">${displayText}</div>
+                        <div style="font-size: 9px; color: #555; line-height: 1;">${token.id}</div>
+                    </span>`;
+        }
+
+        function updateTokenization() {
+            const text = document.getElementById('textInput').value;
+            const tokens = tokenize(text);
+            
+            // Update stats
+            document.getElementById('stats').innerHTML = 
+                `<strong>Total tokens:</strong> ${tokens.length}`;
+            
+            // Update token display
+            document.getElementById('tokenDisplay').innerHTML = 
+                tokens.map((token, index) => displayToken(token, index)).join('');
+            
+            // Update token IDs
+            document.getElementById('tokenIds').textContent = 
+                `[${tokens.map(t => t.id).join(', ')}]`;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const textarea = document.getElementById('textInput');
+            textarea.addEventListener('input', updateTokenization);
+            updateTokenization(); // Initial render
+        });
+    </script>
+</body>
+</html>
