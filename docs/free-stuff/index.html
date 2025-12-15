@@ -228,43 +228,108 @@
   <script>
     const items = [
       {
-        "id": "beats-studio-buds",
-        "title": "Beats Studio Buds",
-        "description": "Black wireless earbuds with charging case. Good condition, fully functional.",
-        "images": [
-          "imgs/PXL_20251215_023956899.jpg",
-          "imgs/PXL_20251215_024016701.jpg"
-        ],
-        "available": true
+        "id": "knuth-taocp",
+        "title": "The Art of Computer Programming (Knuth)",
+        "description": "Volumes 1-4A in slipcase. Note: newest edition is 1-4B, so this set is one version behind.",
+        "images": ["imgs/PXL_20251215_024613001.jpg"],
+        "available": true,
+        "value": 200
+      },
+      {
+        "id": "trezor-model-t",
+        "title": "Trezor Model T",
+        "description": "Crypto hardware wallet. Color touchscreen, USB-C, supports 1000+ coins.",
+        "images": ["imgs/PXL_20251215_035253134.jpg"],
+        "available": true,
+        "value": 180
       },
       {
         "id": "tp-link-deco",
         "title": "TP-Link Deco W6000 Mesh Wi-Fi System",
         "description": "AX3000 Whole Home Mesh Wi-Fi 6 System. 2-pack with original box and accessories.",
-        "images": [
-          "imgs/PXL_20251215_024055820.jpg",
-          "imgs/PXL_20251215_024107553.jpg"
-        ],
-        "available": true
+        "images": ["imgs/PXL_20251215_024055820.jpg", "imgs/PXL_20251215_024107553.jpg"],
+        "available": true,
+        "value": 150
       },
       {
-        "id": "phone-cases",
-        "title": "Pixel Phone Cases",
-        "description": "Two black protective cases: one for Pixel 9 XL, one for Pixel 8 XL. Textured finish.",
-        "images": [
-          "imgs/PXL_20251215_024141815.jpg"
-        ],
-        "available": true
+        "id": "bose-headphones",
+        "title": "Bose QuietComfort Headphones",
+        "description": "Over-ear noise cancelling headphones with carrying case. Used, some wear on ear pads.",
+        "images": ["imgs/PXL_20251210_184411046.jpg", "imgs/PXL_20251210_184417467.jpg"],
+        "available": true,
+        "value": 100
+      },
+      {
+        "id": "cm-keyboard",
+        "title": "Cooler Master QuickFire Stealth",
+        "description": "TKL mechanical keyboard. Cherry MX Green switches, detachable cable, steel backplate.",
+        "images": ["imgs/PXL_20251215_035314799.jpg", "imgs/PXL_20251215_035319738.jpg", "imgs/PXL_20251215_035328590.jpg"],
+        "available": true,
+        "value": 80
+      },
+      {
+        "id": "beats-studio-buds",
+        "title": "Beats Studio Buds",
+        "description": "Black wireless earbuds with charging case. Good condition, fully functional.",
+        "images": ["imgs/PXL_20251215_023956899.jpg", "imgs/PXL_20251215_024016701.jpg"],
+        "available": true,
+        "value": 50
       },
       {
         "id": "hand-mixer",
         "title": "Black+Decker Helix Hand Mixer",
         "description": "Performance Helix Premium Hand Mixer. New in box, never opened. 5 speeds + turbo boost, includes helix beaters, dough hooks, and wire whisk.",
-        "images": [
-          "imgs/PXL_20251215_024423913.jpg",
-          "imgs/PXL_20251215_024432372.jpg"
-        ],
-        "available": true
+        "images": ["imgs/PXL_20251215_024423913.jpg", "imgs/PXL_20251215_024432372.jpg"],
+        "available": true,
+        "value": 45
+      },
+      {
+        "id": "dsp-lyons",
+        "title": "Understanding Digital Signal Processing",
+        "description": "Richard G. Lyons. Third Edition (Pearson). International edition.",
+        "images": ["imgs/PXL_20251215_034519464.jpg"],
+        "available": true,
+        "value": 20
+      },
+      {
+        "id": "tanenbaum-computer-org",
+        "title": "Structured Computer Organization",
+        "description": "Andrew S. Tanenbaum & Todd Austin. Sixth Edition. International edition.",
+        "images": ["imgs/PXL_20251215_034526901.jpg"],
+        "available": true,
+        "value": 20
+      },
+      {
+        "id": "spy-traitor",
+        "title": "The Spy and the Traitor",
+        "description": "Ben Macintyre. Cold War espionage non-fiction.",
+        "images": ["imgs/PXL_20251215_034455277.jpg"],
+        "available": true,
+        "value": 15
+      },
+      {
+        "id": "feynman-six-pieces",
+        "title": "Six Not-So-Easy Pieces",
+        "description": "Richard P. Feynman. Einstein's Relativity, Symmetry, and Space-Time.",
+        "images": ["imgs/PXL_20251215_034503387.jpg"],
+        "available": true,
+        "value": 15
+      },
+      {
+        "id": "feynman-qed",
+        "title": "QED: The Strange Theory of Light and Matter",
+        "description": "Richard P. Feynman. Princeton Science Library edition.",
+        "images": ["imgs/PXL_20251215_034509698.jpg"],
+        "available": true,
+        "value": 15
+      },
+      {
+        "id": "phone-cases",
+        "title": "Pixel Phone Cases",
+        "description": "Two black protective cases: one for Pixel 9 XL, one for Pixel 8 XL. Textured finish.",
+        "images": ["imgs/PXL_20251215_024141815.jpg"],
+        "available": true,
+        "value": 2
       }
     ];
 
@@ -346,9 +411,9 @@
       }
     }
 
-    // Render items
+    // Render items sorted by value descending
     const grid = document.getElementById('items-grid');
-    grid.innerHTML = items.map(createItemCard).join('');
+    grid.innerHTML = [...items].sort((a, b) => b.value - a.value).map(createItemCard).join('');
 
     // Initialize carousels
     document.querySelectorAll('.item-card').forEach(initImageCarousel);
