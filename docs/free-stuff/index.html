@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free Stuff - Pick Up Only</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      line-height: 1.5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 20px;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #1d1d1f;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: #86868b;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .notice {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 12px;
+      padding: 16px 24px;
+      margin: 24px auto;
+      max-width: 500px;
+      font-weight: 500;
+    }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .item-card {
+      background: white;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .item-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .item-images {
+      position: relative;
+      height: 280px;
+      overflow: hidden;
+      background: #f5f5f7;
+    }
+
+    .item-images img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .item-images img.active {
+      display: block;
+    }
+
+    .image-nav {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+    }
+
+    .image-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .image-dot.active {
+      background: white;
+    }
+
+    .image-arrows {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 8px;
+      pointer-events: none;
+    }
+
+    .image-arrow {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #1d1d1f;
+      pointer-events: auto;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .item-images:hover .image-arrow {
+      opacity: 1;
+    }
+
+    .image-arrow:hover {
+      background: white;
+    }
+
+    .item-content {
+      padding: 20px;
+    }
+
+    .item-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .item-description {
+      color: #6e6e73;
+      font-size: 0.95rem;
+    }
+
+    .item-status {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .item-status.available {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .item-status.taken {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: #86868b;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+      }
+
+      .items-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Free Stuff</h1>
+      <p class="subtitle">I'm moving and giving away these items for free. Everything must go!</p>
+      <div class="notice">
+        📍 Pick up only - message me to arrange a time
+      </div>
+    </header>
+
+    <div class="items-grid" id="items-grid">
+      <!-- Items will be loaded here -->
+    </div>
+
+    <footer>
+      <p>First come, first served. Items updated as they're claimed.</p>
+    </footer>
+  </div>
+
+  <script>
+    const items = [
+      {
+        "id": "beats-studio-buds",
+        "title": "Beats Studio Buds",
+        "description": "Black wireless earbuds with charging case. Good condition, fully functional.",
+        "images": [
+          "imgs/PXL_20251215_023956899.jpg",
+          "imgs/PXL_20251215_024016701.jpg"
+        ],
+        "available": true
+      },
+      {
+        "id": "tp-link-deco",
+        "title": "TP-Link Deco W6000 Mesh Wi-Fi System",
+        "description": "AX3000 Whole Home Mesh Wi-Fi 6 System. 2-pack with original box and accessories.",
+        "images": [
+          "imgs/PXL_20251215_024055820.jpg",
+          "imgs/PXL_20251215_024107553.jpg"
+        ],
+        "available": true
+      },
+      {
+        "id": "phone-cases",
+        "title": "Pixel Phone Cases",
+        "description": "Two black protective cases: one for Pixel 9 XL, one for Pixel 8 XL. Textured finish.",
+        "images": [
+          "imgs/PXL_20251215_024141815.jpg"
+        ],
+        "available": true
+      },
+      {
+        "id": "hand-mixer",
+        "title": "Black+Decker Helix Hand Mixer",
+        "description": "Performance Helix Premium Hand Mixer. New in box, never opened. 5 speeds + turbo boost, includes helix beaters, dough hooks, and wire whisk.",
+        "images": [
+          "imgs/PXL_20251215_024423913.jpg",
+          "imgs/PXL_20251215_024432372.jpg"
+        ],
+        "available": true
+      }
+    ];
+
+    function createItemCard(item) {
+      const hasMultipleImages = item.images.length > 1;
+
+      let imagesHtml = item.images.map((img, idx) =>
+        `<img src="${img}" alt="${item.title}" class="${idx === 0 ? 'active' : ''}" data-index="${idx}">`
+      ).join('');
+
+      let dotsHtml = '';
+      let arrowsHtml = '';
+
+      if (hasMultipleImages) {
+        dotsHtml = `<div class="image-nav">
+          ${item.images.map((_, idx) =>
+            `<button class="image-dot ${idx === 0 ? 'active' : ''}" data-index="${idx}"></button>`
+          ).join('')}
+        </div>`;
+
+        arrowsHtml = `<div class="image-arrows">
+          <button class="image-arrow prev">‹</button>
+          <button class="image-arrow next">›</button>
+        </div>`;
+      }
+
+      return `
+        <div class="item-card" data-item-id="${item.id}">
+          <div class="item-images">
+            ${imagesHtml}
+            ${dotsHtml}
+            ${arrowsHtml}
+          </div>
+          <div class="item-content">
+            <h2 class="item-title">${item.title}</h2>
+            <p class="item-description">${item.description}</p>
+            <span class="item-status ${item.available ? 'available' : 'taken'}">
+              ${item.available ? 'Available' : 'Taken'}
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    function initImageCarousel(card) {
+      const images = card.querySelectorAll('.item-images img');
+      const dots = card.querySelectorAll('.image-dot');
+      const prevBtn = card.querySelector('.image-arrow.prev');
+      const nextBtn = card.querySelector('.image-arrow.next');
+
+      if (images.length <= 1) return;
+
+      let currentIndex = 0;
+
+      function showImage(index) {
+        images.forEach(img => img.classList.remove('active'));
+        dots.forEach(dot => dot.classList.remove('active'));
+        images[index].classList.add('active');
+        dots[index].classList.add('active');
+        currentIndex = index;
+      }
+
+      dots.forEach(dot => {
+        dot.addEventListener('click', () => {
+          showImage(parseInt(dot.dataset.index));
+        });
+      });
+
+      if (prevBtn && nextBtn) {
+        prevBtn.addEventListener('click', () => {
+          const newIndex = currentIndex === 0 ? images.length - 1 : currentIndex - 1;
+          showImage(newIndex);
+        });
+
+        nextBtn.addEventListener('click', () => {
+          const newIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
+          showImage(newIndex);
+        });
+      }
+    }
+
+    // Render items
+    const grid = document.getElementById('items-grid');
+    grid.innerHTML = items.map(createItemCard).join('');
+
+    // Initialize carousels
+    document.querySelectorAll('.item-card').forEach(initImageCarousel);
+  </script>
+</body>
+</html>
