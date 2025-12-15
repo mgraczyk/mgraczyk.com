@@ -411,9 +411,9 @@
       }
     }
 
-    // Render items sorted by availability (available at bottom), then value descending
+    // Render items sorted by availability (available at top), then value descending
     const grid = document.getElementById('items-grid');
-    grid.innerHTML = [...items].sort((a, b) => (a.available - b.available) || (b.value - a.value)).map(createItemCard).join('');
+    grid.innerHTML = [...items].sort((a, b) => (b.available - a.available) || (b.value - a.value)).map(createItemCard).join('');
 
     // Initialize carousels
     document.querySelectorAll('.item-card').forEach(initImageCarousel);
