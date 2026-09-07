@@ -3,8 +3,10 @@ import {
   FilesetResolver,
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/+esm";
 
-const MEDIAPIPE_WASM = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm";
-const FACE_MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+const MEDIAPIPE_WASM =
+  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm";
+const FACE_MODEL =
+  "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
 
 const ui = {
   video: document.querySelector("#camera"),
@@ -30,6 +32,12 @@ let faceLastSeenAt = 0;
 let fpsWindowStart = performance.now();
 let fpsFrames = 0;
 let smoothedEyes = null;
+
+// Per-eye long-term geometry. This is intentionally based only on eye landmarks.
+// baselineRatio tracks the upper envelope of lid aperture / eye width: it rises
+// quickly when the eye is more open and decays very slowly, so blinks affect
+// "openness" without redefining the person's stable eye shape.
+let eyeShapeState = null;
 
 const gl = ui.canvas.getContext("webgl", {
   alpha: true,
@@ -96,7 +104,6 @@ float heartMask(vec2 p) {
 void main() {
   vec2 p = (v_uv - 0.5) * 2.0;
   vec4 color = vec4(0.0);
-  float aa = 0.035;
 
   if (u_effect < 0.5) {
     float shell = 1.0 - smoothstep(0.95, 1.0, ellipse(p, vec2(0.86, 0.96)));
@@ -177,12 +184,11 @@ function createProgram() {
 const program = createProgram();
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-  -1, -1,
-   1, -1,
-  -1,  1,
-   1,  1,
-]), gl.STATIC_DRAW);
+gl.bufferData(
+  gl.ARRAY_BUFFER,
+  new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
+  gl.STATIC_DRAW,
+);
 
 const locations = {
   position: gl.getAttribLocation(program, "a_position"),
@@ -199,6 +205,10 @@ gl.enableVertexAttribArray(locations.position);
 gl.vertexAttribPointer(locations.position, 2, gl.FLOAT, false, 0, 0);
 gl.enable(gl.BLEND);
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
 
 function resizeCanvas() {
   const rect = ui.stage.getBoundingClientRect();
@@ -240,7 +250,10 @@ async function createLandmarker() {
   try {
     return await FaceLandmarker.createFromOptions(vision, options);
   } catch (gpuError) {
-    console.warn("MediaPipe GPU delegate failed; retrying without an explicit delegate.", gpuError);
+    console.warn(
+      "MediaPipe GPU delegate failed; retrying without an explicit delegate.",
+      gpuError,
+    );
     delete options.baseOptions.delegate;
     return await FaceLandmarker.createFromOptions(vision, options);
   }
@@ -262,7 +275,10 @@ async function init() {
     ui.startButton.disabled = false;
   } catch (error) {
     console.error(error);
-    setStatus("Could not load the face tracker. Check your connection and reload.", true);
+    setStatus(
+      "Could not load the face tracker. Check your connection and reload.",
+      true,
+    );
   }
 }
 
@@ -289,6 +305,7 @@ async function startCamera() {
     lastDetectAt = 0;
     faceLastSeenAt = performance.now();
     smoothedEyes = null;
+    eyeShapeState = null;
     ui.startPanel.hidden = true;
     ui.stopButton.disabled = false;
     ui.trackingHint.hidden = false;
@@ -296,9 +313,16 @@ async function startCamera() {
   } catch (error) {
     console.error(error);
     let message = "Could not start the camera.";
-    if (error?.name === "NotAllowedError") message = "Camera permission was denied. Allow camera access and try again.";
-    if (error?.name === "NotFoundError") message = "No front-facing camera was found.";
-    if (error?.name === "NotReadableError") message = "The camera is already in use by another app or tab.";
+    if (error?.name === "NotAllowedError") {
+      message =
+        "Camera permission was denied. Allow camera access and try again.";
+    }
+    if (error?.name === "NotFoundError") {
+      message = "No front-facing camera was found.";
+    }
+    if (error?.name === "NotReadableError") {
+      message = "The camera is already in use by another app or tab.";
+    }
     setStatus(message, true);
     ui.startButton.disabled = false;
   }
@@ -308,10 +332,11 @@ function stopCamera() {
   running = false;
   cancelAnimationFrame(animationId);
   animationId = 0;
-  mediaStream?.getTracks().forEach(track => track.stop());
+  mediaStream?.getTracks().forEach((track) => track.stop());
   mediaStream = null;
   ui.video.srcObject = null;
   smoothedEyes = null;
+  eyeShapeState = null;
   clearCanvas();
   ui.trackingHint.hidden = true;
   ui.stopButton.disabled = true;
@@ -346,7 +371,7 @@ function mapLandmarkToStage(landmark) {
   };
 }
 
-function eyeFromCorners(landmarks, aIndex, bIndex, upperIndex, lowerIndex) {
+function measureEye(landmarks, aIndex, bIndex, upperIndex, lowerIndex) {
   const a = mapLandmarkToStage(landmarks[aIndex]);
   const b = mapLandmarkToStage(landmarks[bIndex]);
   const upper = mapLandmarkToStage(landmarks[upperIndex]);
@@ -354,16 +379,14 @@ function eyeFromCorners(landmarks, aIndex, bIndex, upperIndex, lowerIndex) {
 
   const dx = b.x - a.x;
   const dy = b.y - a.y;
-  const cornerDistance = Math.hypot(dx, dy);
+  const cornerDistance = Math.max(1, Math.hypot(dx, dy));
   const lidDistance = Math.hypot(lower.x - upper.x, lower.y - upper.y);
-  const width = Math.max(30, cornerDistance * 1.42);
-  const height = Math.max(width * 0.66, lidDistance * 3.5);
 
   return {
     x: (a.x + b.x) * 0.5,
     y: (a.y + b.y) * 0.5,
-    width,
-    height: Math.min(height, width * 0.92),
+    cornerDistance,
+    apertureRatio: lidDistance / cornerDistance,
     angle: Math.atan2(dy, dx),
   };
 }
@@ -374,12 +397,58 @@ function normalizeAngle(angle) {
   return angle;
 }
 
+function updateStableEyeShape(measurements) {
+  if (!eyeShapeState) {
+    eyeShapeState = measurements.map((eye) => ({
+      // Avoid permanently learning a blink on the first frame.
+      baselineRatio: Math.max(0.16, eye.apertureRatio),
+    }));
+  }
+
+  return measurements.map((eye, index) => {
+    const state = eyeShapeState[index];
+    const ratio = clamp(eye.apertureRatio, 0.025, 0.5);
+
+    // Fast upward adaptation learns the person's more-open geometry within a
+    // few frames. Extremely slow downward adaptation means blinks/squints do
+    // not redefine the stable shape.
+    const rate = ratio > state.baselineRatio ? 0.24 : 0.0015;
+    state.baselineRatio += (ratio - state.baselineRatio) * rate;
+    state.baselineRatio = clamp(state.baselineRatio, 0.10, 0.36);
+
+    // Stable natural shape: lower upper-envelope aperture => narrower effect.
+    // This is a continuous geometric mapping, not an identity classifier.
+    const naturalT = clamp((state.baselineRatio - 0.12) / 0.20, 0, 1);
+    const naturalAspect = 0.48 + naturalT * 0.38;
+
+    // Fast expression component. A blink lowers the effect height relative to
+    // the person's own stable baseline, preserving the original behavior.
+    const openness = clamp(ratio / state.baselineRatio, 0.10, 1.08);
+    const opennessScale = 0.34 + 0.66 * openness;
+
+    const width = Math.max(30, eye.cornerDistance * 1.42);
+    const height = clamp(
+      width * naturalAspect * opennessScale,
+      width * 0.18,
+      width * 0.92,
+    );
+
+    return {
+      x: eye.x,
+      y: eye.y,
+      width,
+      height,
+      angle: normalizeAngle(eye.angle),
+    };
+  });
+}
+
 function getEyes(landmarks) {
-  const first = eyeFromCorners(landmarks, 33, 133, 159, 145);
-  const second = eyeFromCorners(landmarks, 362, 263, 386, 374);
-  first.angle = normalizeAngle(first.angle);
-  second.angle = normalizeAngle(second.angle);
-  return [first, second];
+  const measurements = [
+    measureEye(landmarks, 33, 133, 159, 145),
+    measureEye(landmarks, 362, 263, 386, 374),
+  ];
+  return updateStableEyeShape(measurements);
 }
 
 function lerpAngle(a, b, t) {
@@ -391,7 +460,7 @@ function lerpAngle(a, b, t) {
 
 function smoothEyes(nextEyes) {
   if (!smoothedEyes) {
-    smoothedEyes = nextEyes.map(eye => ({ ...eye }));
+    smoothedEyes = nextEyes.map((eye) => ({ ...eye }));
     return smoothedEyes;
   }
 
@@ -449,8 +518,15 @@ function frameLoop(now) {
   if (!running) return;
   updateFps(now);
 
-  const videoReady = ui.video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && ui.video.videoWidth > 0;
-  if (videoReady && ui.video.currentTime !== lastVideoTime && now - lastDetectAt >= 32) {
+  const videoReady =
+    ui.video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+    ui.video.videoWidth > 0;
+
+  if (
+    videoReady &&
+    ui.video.currentTime !== lastVideoTime &&
+    now - lastDetectAt >= 32
+  ) {
     lastVideoTime = ui.video.currentTime;
     lastDetectAt = now;
 
@@ -470,6 +546,9 @@ function frameLoop(now) {
 
   if (now - faceLastSeenAt > 350) {
     smoothedEyes = null;
+    // Lose the long-term shape after the face disappears so a new person
+    // starts with a fresh geometry estimate.
+    eyeShapeState = null;
     clearCanvas();
     ui.trackingHint.hidden = false;
   } else if (smoothedEyes) {
@@ -485,7 +564,7 @@ ui.effectPicker.addEventListener("click", (event) => {
   const button = event.target.closest("[data-effect]");
   if (!button) return;
   currentEffect = Number(button.dataset.effect) || 0;
-  ui.effectPicker.querySelectorAll("[data-effect]").forEach(option => {
+  ui.effectPicker.querySelectorAll("[data-effect]").forEach((option) => {
     const selected = option === button;
     option.classList.toggle("is-selected", selected);
     option.setAttribute("aria-checked", String(selected));
@@ -505,7 +584,7 @@ init();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(error => {
+    navigator.serviceWorker.register("./sw.js").catch((error) => {
       console.warn("Service worker registration failed", error);
     });
   });
