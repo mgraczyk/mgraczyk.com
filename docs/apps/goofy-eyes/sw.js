@@ -1,4 +1,4 @@
-const CACHE_NAME = "goofy-eyes-v1";
+const CACHE_NAME = "goofy-eyes-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
